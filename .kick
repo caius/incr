@@ -1,0 +1,6 @@
+process do |files|
+  build = execute("pebble build")
+  execute("pebble install") if build.exit_code.zero?
+
+  files.replace([])
+end
