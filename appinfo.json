@@ -2,7 +2,7 @@
   "uuid": "3aa93a3b-c25e-451e-b828-91b172889985",
   "shortName": "incr",
   "longName": "incr",
-  "companyName": "MakeAwesomeHappen",
+  "companyName": "SwedishCampground",
   "versionCode": 1,
   "versionLabel": "1.0.0",
   "watchapp": {
@@ -12,6 +12,13 @@
     "dummy": 0
   },
   "resources": {
-    "media": []
+    "media": [
+      {
+        "type": "font",
+        "name": "LIB_MONO_BOLD_SUBSET_62",
+        "file": "fonts/LiberationMono-Bold.ttf",
+        "characterRegex": "[0-9]"
+      }
+    ]
   }
 }

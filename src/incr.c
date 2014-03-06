@@ -2,41 +2,109 @@
 
 static Window *window;
 static TextLayer *text_layer;
+static ActionBarLayer *action_layer;
 
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  text_layer_set_text(text_layer, "Select");
+static char counter_string[4];
+static int counter = 512;
+
+// TODO: replace with calculating from root window bounds
+static int titlebar_height = 20;
+
+static int screen_width = 144;
+static int screen_height = 168;
+
+static int text_width = 120;
+static int text_height = 80;
+
+static int text_offset_width;
+static int text_offset_height;
+
+static int COUNTER_KEY = 100;
+
+static void setup_calculations() {
+  text_offset_width = (screen_width - ACTION_BAR_WIDTH - text_width) / 2;
+  text_offset_height = (screen_height - titlebar_height - text_height) / 2;
 }
 
-static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  text_layer_set_text(text_layer, "Up");
+// Updates the counter & redraws the screen
+// change [int] amount to change counter by; negative number decrements
+static void update_counter_by(int change) {
+  // Update the value we store
+  counter = counter + change;
+  // Keep us bounded to 0-999
+  if (0 > counter || counter > 999) {
+    counter = 0;
+  }
+
+  // Persist the current count
+  persist_write_int(COUNTER_KEY, counter);
+
+  // Update the display
+  snprintf(counter_string, 4, "%d", counter);
+  text_layer_set_text(text_layer, counter_string);
 }
 
-static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  text_layer_set_text(text_layer, "Down");
+static void increment_handler(ClickRecognizerRef recognizer, void *context) {
+  update_counter_by(1);
+}
+
+static void decrement_handler(ClickRecognizerRef recognizer, void *context) {
+  update_counter_by(-1);
+}
+
+static void light_handler(ClickRecognizerRef recognizer, void *context) {
+  light_enable_interaction();
+}
+
+static void reset_handler(ClickRecognizerRef recognizer, void *context) {
+  update_counter_by(1000); // Force an overflow back to zero
 }
 
 static void click_config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
-  window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+  // Short Press up (back) is decrement; Short press down (next) is increment
+  window_single_click_subscribe(BUTTON_ID_UP, decrement_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, increment_handler);
+
+  // Turn the light on momentarily
+  window_single_click_subscribe(BUTTON_ID_SELECT, light_handler);
+
+  // Reset the counter to zero; 1 second trigger for length
+  window_long_click_subscribe(BUTTON_ID_SELECT, 1000, reset_handler, NULL);
 }
 
 static void window_load(Window *window) {
-  Layer *window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
+  action_layer = action_bar_layer_create();
+  action_bar_layer_add_to_window(action_layer, window);
+  // TODO: add icons to action layer
+  // action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, &my_icon_previous);
+  // action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, &my_icon_next);
+  action_bar_layer_set_click_config_provider(action_layer, click_config_provider);
 
-  text_layer = text_layer_create((GRect) { .origin = { 0, 72 }, .size = { bounds.size.w, 20 } });
-  text_layer_set_text(text_layer, "Press a button");
-  text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
-  layer_add_child(window_layer, text_layer_get_layer(text_layer));
+  text_layer = text_layer_create((GRect) { .origin = { text_offset_width, text_offset_height }, .size = { text_width, text_height } });
+  text_layer_set_font(text_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_LIB_MONO_BOLD_SUBSET_62)));
+  text_layer_set_text_alignment(text_layer, GTextAlignmentRight);
+  text_layer_set_text_color(text_layer, GColorBlack);
+  text_layer_set_background_color(text_layer, GColorWhite);
+
+  // Read the counter out (nil value == 0) and increment counter by it
+  // Basically sets screen & `counter' to stored value
+  // TODO: work out why this alternates from 0 to 512 on close/open of app
+  update_counter_by(persist_read_int(COUNTER_KEY));
+
+  layer_set_clips(text_layer_get_layer(text_layer), false);
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(text_layer));
 }
 
 static void window_unload(Window *window) {
   text_layer_destroy(text_layer);
+  action_bar_layer_destroy(action_layer);
 }
 
 static void init(void) {
+  setup_calculations();
+
   window = window_create();
+  window_set_background_color(window, GColorWhite);
   window_set_click_config_provider(window, click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
@@ -52,9 +120,6 @@ static void deinit(void) {
 
 int main(void) {
   init();
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window: %p", window);
-
   app_event_loop();
   deinit();
 }
