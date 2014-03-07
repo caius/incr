@@ -1,3 +1,4 @@
 # Ignore build artifacts
 .lock-waf*
 build/
+tmp/
