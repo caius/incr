@@ -68,8 +68,7 @@ static void click_config_provider(void *context) {
 }
 
 static void setup_action_layer() {
-  action_layer = action_bar_layer_create();
-  action_bar_layer_add_to_window(action_layer, window);
+  action_bar_layer_create_in_window(action_layer, window);
   // TODO: add icons to action layer
   // action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, &my_icon_previous);
   // action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, &my_icon_next);
@@ -97,8 +96,8 @@ static void window_load(Window *window) {
 }
 
 static void window_unload(Window *window) {
-  text_layer_destroy(text_layer);
-  action_bar_layer_destroy(action_layer);
+  text_layer_destroy_safe(text_layer);
+  action_bar_layer_destroy_safe(action_layer);
 }
 
 static void init(void) {
@@ -116,7 +115,7 @@ static void init(void) {
 }
 
 static void deinit(void) {
-  window_destroy(window);
+  window_destroy_safe(window);
 }
 
 int main(void) {
