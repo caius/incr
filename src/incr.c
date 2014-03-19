@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include "pebble-assist.h"
 
 static Window *window;
 static TextLayer *text_layer;
@@ -6,12 +7,6 @@ static ActionBarLayer *action_layer;
 
 static char counter_string[4];
 static int counter = 0;
-
-// TODO: replace with calculating from root window bounds
-static int titlebar_height = 20;
-
-static int screen_width = 144;
-static int screen_height = 168;
 
 static int text_width = 120;
 static int text_height = 80;
@@ -22,8 +17,8 @@ static int text_offset_height;
 // static int COUNTER_KEY = 100;
 
 static void setup_calculations() {
-  text_offset_width = (screen_width - ACTION_BAR_WIDTH - text_width) / 2;
-  text_offset_height = (screen_height - titlebar_height - text_height) / 2;
+  text_offset_width = (PEBBLE_WIDTH - ACTION_BAR_WIDTH - text_width) / 2;
+  text_offset_height = (PEBBLE_HEIGHT - STATUS_HEIGHT - text_height) / 2;
 }
 
 // Updates the counter & redraws the screen
@@ -85,12 +80,9 @@ static void setup_text_layer() {
   text_layer = text_layer_create((GRect) { .origin = { text_offset_width, text_offset_height }, .size = { text_width, text_height } });
   text_layer_set_font(text_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_LIB_MONO_BOLD_SUBSET_62)));
   text_layer_set_text_alignment(text_layer, GTextAlignmentRight);
-  text_layer_set_text_color(text_layer, GColorBlack);
-  text_layer_set_background_color(text_layer, GColorWhite);
-
-  // Add to the window
+  text_layer_set_colours(text_layer, GColorBlack, GColorWhite);
   layer_set_clips(text_layer_get_layer(text_layer), false);
-  layer_add_child(window_get_root_layer(window), text_layer_get_layer(text_layer));
+  text_layer_add_to_window(text_layer, window);
 }
 
 static void window_load(Window *window) {
