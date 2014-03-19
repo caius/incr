@@ -57,7 +57,7 @@ THE SOFTWARE.
 #define ERROR(...) app_log(APP_LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 
 // Window Helpers
-#define window_destroy_safe(window) if (window) { window_destroy(layer); }
+#define window_destroy_safe(window) if (window) { window_destroy(window); }
 
 // Layer Helpers
 #define layer_create_fullscreen(window) layer_create(layer_get_bounds(window_get_root_layer(window)))
