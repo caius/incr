@@ -72,28 +72,36 @@ static void click_config_provider(void *context) {
   window_long_click_subscribe(BUTTON_ID_SELECT, 1000, reset_handler, NULL);
 }
 
-static void window_load(Window *window) {
+static void setup_action_layer() {
   action_layer = action_bar_layer_create();
   action_bar_layer_add_to_window(action_layer, window);
   // TODO: add icons to action layer
   // action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, &my_icon_previous);
   // action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, &my_icon_next);
   action_bar_layer_set_click_config_provider(action_layer, click_config_provider);
+}
 
+static void setup_text_layer() {
   text_layer = text_layer_create((GRect) { .origin = { text_offset_width, text_offset_height }, .size = { text_width, text_height } });
   text_layer_set_font(text_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_LIB_MONO_BOLD_SUBSET_62)));
   text_layer_set_text_alignment(text_layer, GTextAlignmentRight);
   text_layer_set_text_color(text_layer, GColorBlack);
   text_layer_set_background_color(text_layer, GColorWhite);
 
+  // Add to the window
+  layer_set_clips(text_layer_get_layer(text_layer), false);
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(text_layer));
+}
+
+static void window_load(Window *window) {
+  setup_action_layer();
+  setup_text_layer();
+
   // Read the counter out (nil value == 0) and increment counter by it
   // Basically sets screen & `counter' to stored value
   // TODO: work out why this alternates from 0 to 512 on close/open of app
   // update_counter_by(persist_read_int(COUNTER_KEY));
   update_counter_by(0);
-
-  layer_set_clips(text_layer_get_layer(text_layer), false);
-  layer_add_child(window_get_root_layer(window), text_layer_get_layer(text_layer));
 }
 
 static void window_unload(Window *window) {
