@@ -4,7 +4,9 @@
 static Window *window;
 static TextLayer *text_layer;
 static ActionBarLayer *action_layer;
+
 static GBitmap *icon_increment;
+static GBitmap *icon_decrement;
 
 static char counter_string[4];
 static int counter = 0;
@@ -71,9 +73,12 @@ static void click_config_provider(void *context) {
 static void setup_action_layer() {
   action_bar_layer_create_in_window(action_layer, window);
 
+  icon_decrement = gbitmap_create_with_resource(RESOURCE_ID_ICON_DECREMENT);
+  action_bar_layer_set_icon(action_layer, BUTTON_ID_UP, icon_decrement);
+
   icon_increment = gbitmap_create_with_resource(RESOURCE_ID_ICON_INCREMENT);
-  // action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, &);
   action_bar_layer_set_icon(action_layer, BUTTON_ID_DOWN, icon_increment);
+
   action_bar_layer_set_click_config_provider(action_layer, click_config_provider);
 }
 
