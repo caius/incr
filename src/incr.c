@@ -17,7 +17,7 @@ static int text_height = 80;
 static int text_offset_width;
 static int text_offset_height;
 
-// static int COUNTER_KEY = 100;
+static int CACHE_COUNTER_KEY = 100;
 
 static void setup_calculations() {
   text_offset_width = (PEBBLE_WIDTH - ACTION_BAR_WIDTH - text_width) / 2;
@@ -25,21 +25,24 @@ static void setup_calculations() {
 }
 
 // Updates the counter & redraws the screen
-// change [int] amount to change counter by; negative number decrements
-static void update_counter_by(int change) {
-  // Update the value we store
-  counter = counter + change;
+static void update_counter_to(int value) {
+  counter = value;
+
   // Keep us bounded to 0-999
   if (0 > counter || counter > 999) {
     counter = 0;
   }
 
-  // Persist the current count
-  // persist_write_int(COUNTER_KEY, counter);
-
   // Update the display
   snprintf(counter_string, 4, "%d", counter);
   text_layer_set_text(text_layer, counter_string);
+}
+
+// change [int] amount to change counter by; negative number decrements
+static void update_counter_by(int change) {
+  // Update the value we store
+  update_counter_to(counter + change);
+
 }
 
 static void increment_handler(ClickRecognizerRef recognizer, void *context) {
@@ -97,12 +100,13 @@ static void window_load(Window *window) {
 
   // Read the counter out (nil value == 0) and increment counter by it
   // Basically sets screen & `counter' to stored value
-  // TODO: work out why this alternates from 0 to 512 on close/open of app
-  // update_counter_by(persist_read_int(COUNTER_KEY));
-  update_counter_by(0);
+  update_counter_to(persist_read_int(CACHE_COUNTER_KEY));
 }
 
 static void window_unload(Window *window) {
+  // Persist the current count
+  persist_write_int(CACHE_COUNTER_KEY, counter);
+
   text_layer_destroy_safe(text_layer);
   action_bar_layer_destroy_safe(action_layer);
 }
