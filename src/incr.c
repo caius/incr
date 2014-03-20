@@ -5,7 +5,7 @@ static TextLayer *text_layer;
 static ActionBarLayer *action_layer;
 
 static char counter_string[4];
-static int counter = 512;
+static int counter = 0;
 
 // TODO: replace with calculating from root window bounds
 static int titlebar_height = 20;
@@ -19,7 +19,7 @@ static int text_height = 80;
 static int text_offset_width;
 static int text_offset_height;
 
-static int COUNTER_KEY = 100;
+// static int COUNTER_KEY = 100;
 
 static void setup_calculations() {
   text_offset_width = (screen_width - ACTION_BAR_WIDTH - text_width) / 2;
@@ -37,7 +37,7 @@ static void update_counter_by(int change) {
   }
 
   // Persist the current count
-  persist_write_int(COUNTER_KEY, counter);
+  // persist_write_int(COUNTER_KEY, counter);
 
   // Update the display
   snprintf(counter_string, 4, "%d", counter);
@@ -89,7 +89,8 @@ static void window_load(Window *window) {
   // Read the counter out (nil value == 0) and increment counter by it
   // Basically sets screen & `counter' to stored value
   // TODO: work out why this alternates from 0 to 512 on close/open of app
-  update_counter_by(persist_read_int(COUNTER_KEY));
+  // update_counter_by(persist_read_int(COUNTER_KEY));
+  update_counter_by(0);
 
   layer_set_clips(text_layer_get_layer(text_layer), false);
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(text_layer));
