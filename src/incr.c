@@ -1,17 +1,15 @@
 #include <pebble.h>
+#include "pebble-assist.h"
 
 static Window *window;
 static TextLayer *text_layer;
 static ActionBarLayer *action_layer;
 
+static GBitmap *icon_increment;
+static GBitmap *icon_decrement;
+
 static char counter_string[4];
 static int counter = 0;
-
-// TODO: replace with calculating from root window bounds
-static int titlebar_height = 20;
-
-static int screen_width = 144;
-static int screen_height = 168;
 
 static int text_width = 120;
 static int text_height = 80;
@@ -22,8 +20,8 @@ static int text_offset_height;
 // static int COUNTER_KEY = 100;
 
 static void setup_calculations() {
-  text_offset_width = (screen_width - ACTION_BAR_WIDTH - text_width) / 2;
-  text_offset_height = (screen_height - titlebar_height - text_height) / 2;
+  text_offset_width = (PEBBLE_WIDTH - ACTION_BAR_WIDTH - text_width) / 2;
+  text_offset_height = (PEBBLE_HEIGHT - STATUS_HEIGHT - text_height) / 2;
 }
 
 // Updates the counter & redraws the screen
@@ -72,33 +70,41 @@ static void click_config_provider(void *context) {
   window_long_click_subscribe(BUTTON_ID_SELECT, 1000, reset_handler, NULL);
 }
 
-static void window_load(Window *window) {
-  action_layer = action_bar_layer_create();
-  action_bar_layer_add_to_window(action_layer, window);
-  // TODO: add icons to action layer
-  // action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, &my_icon_previous);
-  // action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, &my_icon_next);
-  action_bar_layer_set_click_config_provider(action_layer, click_config_provider);
+static void setup_action_layer() {
+  action_bar_layer_create_in_window(action_layer, window);
 
+  icon_decrement = gbitmap_create_with_resource(RESOURCE_ID_ICON_DECREMENT);
+  action_bar_layer_set_icon(action_layer, BUTTON_ID_UP, icon_decrement);
+
+  icon_increment = gbitmap_create_with_resource(RESOURCE_ID_ICON_INCREMENT);
+  action_bar_layer_set_icon(action_layer, BUTTON_ID_DOWN, icon_increment);
+
+  action_bar_layer_set_click_config_provider(action_layer, click_config_provider);
+}
+
+static void setup_text_layer() {
   text_layer = text_layer_create((GRect) { .origin = { text_offset_width, text_offset_height }, .size = { text_width, text_height } });
   text_layer_set_font(text_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_LIB_MONO_BOLD_SUBSET_62)));
   text_layer_set_text_alignment(text_layer, GTextAlignmentRight);
-  text_layer_set_text_color(text_layer, GColorBlack);
-  text_layer_set_background_color(text_layer, GColorWhite);
+  text_layer_set_colours(text_layer, GColorBlack, GColorWhite);
+  layer_set_clips(text_layer_get_layer(text_layer), false);
+  text_layer_add_to_window(text_layer, window);
+}
+
+static void window_load(Window *window) {
+  setup_action_layer();
+  setup_text_layer();
 
   // Read the counter out (nil value == 0) and increment counter by it
   // Basically sets screen & `counter' to stored value
   // TODO: work out why this alternates from 0 to 512 on close/open of app
   // update_counter_by(persist_read_int(COUNTER_KEY));
   update_counter_by(0);
-
-  layer_set_clips(text_layer_get_layer(text_layer), false);
-  layer_add_child(window_get_root_layer(window), text_layer_get_layer(text_layer));
 }
 
 static void window_unload(Window *window) {
-  text_layer_destroy(text_layer);
-  action_bar_layer_destroy(action_layer);
+  text_layer_destroy_safe(text_layer);
+  action_bar_layer_destroy_safe(action_layer);
 }
 
 static void init(void) {
@@ -116,7 +122,7 @@ static void init(void) {
 }
 
 static void deinit(void) {
-  window_destroy(window);
+  window_destroy_safe(window);
 }
 
 int main(void) {

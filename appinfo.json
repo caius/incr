@@ -18,6 +18,16 @@
         "name": "LIB_MONO_BOLD_SUBSET_62",
         "file": "fonts/LiberationMono-Bold.ttf",
         "characterRegex": "[0-9]"
+      },
+      {
+        "type": "png",
+        "name": "ICON_INCREMENT",
+        "file": "icons/icon_increment.png"
+      },
+      {
+        "type": "png",
+        "name": "ICON_DECREMENT",
+        "file": "icons/icon_decrement.png"
       }
     ]
   }
